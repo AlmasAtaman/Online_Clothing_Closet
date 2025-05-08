@@ -7,9 +7,15 @@ This project allows users to upload images of their real-life clothing. Using ma
 The goal: to help users easily track, organize, and plan outfits using a digital version of their physical closet.
 
 Frontend: Next.js, Tailwind CSS (if applicable)
+
 Backend: Express.js, Node.js
+
 Database: PostgreSQL
+
 Authentication: JWT-based auth
+
 Cloud Storage: AWS S3
+
 Image Processing: Background removal with Detectron2 (instance segmentation) [in progress]
+
 Other: GitHub, CVAT (for annotation), etc.
