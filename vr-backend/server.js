@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import db from './app/models/index.js';
 import authRoutes from './app/routes/auth.routes.js';
 import userRoutes from './app/routes/user.routes.js';
+import uploadRoutes from './app/routes/upload.js';
+
 
 dotenv.config();
 
@@ -27,6 +29,11 @@ app.use(
     httpOnly: true
   })
 );
+
+//added code for AWS S3
+app.use('/images', uploadRoutes); // So POST /images works
+//make sure to only change code here
+
 
 // Routes
 authRoutes(app);

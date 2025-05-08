@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import LogOutButton from "../components/LogoutButton";
+import InputFile from "../components/inputFile";
 
 interface DecodedToken {
     id: number;
@@ -32,6 +33,7 @@ export default function Homepage(){
         <div>
             <h1>Yo {username ? username : "Guest"}</h1>
             <LogOutButton />
+            <InputFile />
         </div>
     );
 
