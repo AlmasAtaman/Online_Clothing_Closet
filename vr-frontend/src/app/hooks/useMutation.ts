@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useState } from "react";
+import toast from 'react-hot-toast';
 
 type UseMutationArgs = {
   url: string;
@@ -34,6 +35,10 @@ const useMutation = ({ url, method = "POST" }: UseMutationArgs) => {
         } 
       });
       setState({ isLoading: false, error: "" });
+      toast.success("Successfully added image!", {
+        duration: 2000,
+        position: "top-center",
+      });
     } catch (error: any) {
       setState({
         isLoading: false,

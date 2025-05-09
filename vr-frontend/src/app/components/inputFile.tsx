@@ -1,4 +1,5 @@
 "use client"
+import useQuery from '../hooks/useQuery';
 import useMutation from '../hooks/useMutation';
 import React, { useRef, useState, ReactNode } from 'react'
 
@@ -8,7 +9,7 @@ type ErrorTextProps = {
 };
 
 const ErrorText = ({ children }: ErrorTextProps) => (
-    <p className="text-red-500">{children}</p>
+    <p className="text-red-500" {...props}>{children}</p>
   );
 
 
@@ -16,6 +17,7 @@ export default function InputFile() {
   const inputRef = useRef<HTMLInputElement>(null);
   const URL = "http://localhost:8000/images";
   const  {mutate: uploadImage, isLoading: uploading, error: uploadError} = useMutation({url: URL });
+  const {data: imageUrls=[], isLoading: imageLoading, error:fetchError} = useQuery(URL);
   const [error, setError] = useState('');
 
   const validFileTypes = ['image/jpg', 'image/jpeg', 'image/png']
@@ -59,6 +61,7 @@ export default function InputFile() {
             </label>       
             {error && <ErrorText>{error}</ErrorText>}
             {uploadError && <ErrorText>{uploadError}</ErrorText>}
+            {fetchError && (<ErrorText textAlign="left">Failed to Load Objects</ErrorText>)}
 
         </>
     );
