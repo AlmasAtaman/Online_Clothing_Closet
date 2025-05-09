@@ -1,28 +1,22 @@
 "use client"
-import useQuery from '../hooks/useQuery';
 import useMutation from '../hooks/useMutation';
 import React, { useRef, useState, ReactNode } from 'react'
 
-
 type ErrorTextProps = {
     children: ReactNode;
-};
+} & React.HTMLAttributes<HTMLParagraphElement>;
 
-const ErrorText = ({ children }: ErrorTextProps) => (
-    <p className="text-red-500" {...props}>{children}</p>
-  );
-
+const ErrorText = ({ children, ...props }: ErrorTextProps) => (
+  <p className="text-red-500" {...props}>{children}</p>
+);
 
 export default function InputFile() {
   const inputRef = useRef<HTMLInputElement>(null);
   const URL = "http://localhost:8000/images";
-  const  {mutate: uploadImage, isLoading: uploading, error: uploadError} = useMutation({url: URL });
-  const {data: imageUrls=[], isLoading: imageLoading, error:fetchError} = useQuery(URL);
+  const {mutate: uploadImage, isLoading: uploading, error: uploadError} = useMutation({url: URL });
   const [error, setError] = useState('');
 
   const validFileTypes = ['image/jpg', 'image/jpeg', 'image/png']
-
-
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -31,9 +25,9 @@ export default function InputFile() {
     if (file && !validFileTypes.includes(file.type)) {
         setError("File must be JPG or PNG format");
         return;
-      } else {
+    } else {
         setError('');
-      }
+    }
 
     if (!file) return;
     const form = new FormData();
@@ -42,28 +36,26 @@ export default function InputFile() {
     await uploadImage(form);
   };
 
-
-
-    return (
-        <>
-            <input
+  return (
+    <div className="flex flex-col items-start gap-2">
+        <input
             ref={inputRef}
             id="imageInput"
             type="file"
             hidden
             onChange={handleUpload}
-            />
-            <label
+        />
+        <label
             htmlFor="imageInput"
-            className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded"
-            >
+            className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
             {uploading ? "Uploading..." : "Upload Image"}
-            </label>       
-            {error && <ErrorText>{error}</ErrorText>}
-            {uploadError && <ErrorText>{uploadError}</ErrorText>}
-            {fetchError && (<ErrorText textAlign="left">Failed to Load Objects</ErrorText>)}
-
-        </>
-    );
-
+        </label>       
+        {error && <ErrorText>{error}</ErrorText>}
+        {uploadError && <ErrorText>{uploadError}</ErrorText>}
+        {uploading && (
+            <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin" />
+        )}
+    </div>
+  );
 }

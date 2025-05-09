@@ -28,12 +28,9 @@ export default function LoginPage(){
             return;
         }
 
-
         localStorage.setItem("accessToken", data.accessToken);
         console.log(`User ${username} logged in`);
         router.push("/dashboard");
-
-
     }
 
 

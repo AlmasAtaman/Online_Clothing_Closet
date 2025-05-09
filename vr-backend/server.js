@@ -15,7 +15,9 @@ const app = express();
 const port = process.env.PORT || 8000;
 
 // CORS
-app.use(cors({ origin: "http://localhost:3000" }));
+app.use(cors({
+  origin: "http://localhost:3000",
+}));
 
 // Body parsers
 app.use(express.json());

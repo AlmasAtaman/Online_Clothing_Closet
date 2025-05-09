@@ -16,19 +16,25 @@ const useQuery = <T =  any>(url:string) => {
     });
 
     useEffect(() => {
-        const fetch = async() => {
-            axios
-            .get(url)
-            .then(({data}) => setState({data, isLoading: false, error: ''}))
-            .catch(error =>
-                setState({ data: null, isLoading: false, error: error.message })
-            );
-        };
+        const fetch = async () => {
+        try {
+            const token = localStorage.getItem("accessToken");
+            const headers = token
+            ? { Authorization: `Bearer ${token}` }
+            : {};
 
-        fetch();
-    }, [url])
+            const { data } = await axios.get(url, { headers });
 
-    return state;
+            setState({ data, isLoading: false, error: "" });
+        } catch (error: any) {
+            setState({ data: null, isLoading: false, error: error.message });
+        }
+    };
+
+    fetch();
+  }, [url]);
+
+  return state;
 };
 
 export default useQuery;

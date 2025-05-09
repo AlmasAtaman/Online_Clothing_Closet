@@ -30,9 +30,9 @@ const useMutation = ({ url, method = "POST" }: UseMutationArgs) => {
         method, 
         data,
         headers: {
-          "x-user-id": "123", // replace with real user ID later
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // ✅ token from login
           "Content-Type": "multipart/form-data",
-        } 
+        }
       });
       setState({ isLoading: false, error: "" });
       toast.success("Successfully added image!", {
