@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import LogOutButton from "../components/LogoutButton";
 import InputFile from "../components/inputFile";
 import ImageGallery from "../components/ImageGallery";
+import { useRouter } from "next/navigation";
 
 interface DecodedToken {
     id: number;
@@ -14,15 +15,23 @@ interface DecodedToken {
 
 export default function Homepage(){
     const [ username, setUsername ] = useState<string | null >(null);
+    const router = useRouter();
 
     useEffect(() => {
         const token = localStorage.getItem("accessToken");
+
+        if (!token) {
+            router.push("/login");
+            return;
+        }
+
         if (token) {
             try {
                 const decoded = jwtDecode<DecodedToken>(token);
                 setUsername(decoded.username);
             } catch (error) {
                 console.error("Invalid Token", error);
+                router.push("/login");
             }
         }
     }, []);
