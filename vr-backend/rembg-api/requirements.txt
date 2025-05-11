@@ -1,4 +1,7 @@
 fastapi
 uvicorn
+pillow
+numpy
 rembg
-python-multipart
+torch
+torchvision
