@@ -2,25 +2,23 @@
 
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
-from rembg import remove
+from rembg import remove, new_session
 from io import BytesIO
 from PIL import Image
-import numpy as np
 
 app = FastAPI()
+
+session = new_session("isnet-general-use")
 
 @app.post("/remove-bg/")
 async def remove_bg(file: UploadFile = File(...)):
     try:
         input_bytes = await file.read()
         input_image = Image.open(BytesIO(input_bytes)).convert("RGBA")
-        output = remove(input_image)
 
-        output_stream = BytesIO()
-        output.save(output_stream, format="PNG")
-        output_stream.seek(0)
+        output_bytes = remove(input_bytes, session=session)
 
-        return StreamingResponse(output_stream, media_type="image/png", headers={
+        return StreamingResponse(BytesIO(output_bytes), media_type="image/png", headers={
             "Content-Disposition": "inline; filename=output.png"
         })
 
