@@ -14,12 +14,14 @@ export default function LoginPage(){
     const checkUser = async (e: React.FormEvent) => {
         e.preventDefault();
         const res = await fetch("http://localhost:8000/api/auth/signin", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, password }),
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ username, password }),
         });
+
 
         const data = await res.json();
 
@@ -28,7 +30,6 @@ export default function LoginPage(){
             return;
         }
 
-        localStorage.setItem("accessToken", data.accessToken);
         console.log(`User ${username} logged in`);
         router.push("/dashboard");
     }

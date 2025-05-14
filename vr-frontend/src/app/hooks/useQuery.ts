@@ -18,12 +18,7 @@ const useQuery = <T =  any>(url:string) => {
     useEffect(() => {
         const fetch = async () => {
         try {
-            const token = localStorage.getItem("accessToken");
-            const headers = token
-            ? { Authorization: `Bearer ${token}` }
-            : {};
-
-            const { data } = await axios.get(url, { headers });
+            const { data } = await axios.get(url, { withCredentials: true });
 
             setState({ data, isLoading: false, error: "" });
         } catch (error: any) {

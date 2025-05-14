@@ -10,11 +10,8 @@ export default function ImageGallery() {
     useEffect(() => {
         const fetchImages = async () => {
             try {
-                const token = localStorage.getItem("accessToken");
                 const response = await fetch('http://localhost:8000/images', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    credentials: "include"
                 });
 
                 if (!response.ok) {

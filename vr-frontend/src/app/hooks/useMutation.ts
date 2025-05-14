@@ -30,7 +30,7 @@ const useMutation = ({ url, method = "POST" }: UseMutationArgs) => {
         method, 
         data,
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // ✅ token from login
+          withCredentials: true,
           "Content-Type": "multipart/form-data",
         }
       });

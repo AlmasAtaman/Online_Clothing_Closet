@@ -21,11 +21,12 @@ export default function signUp(){
     const addUser = async (e: React.FormEvent) => {
         e.preventDefault();
         const res = await fetch("http://localhost:8000/api/auth/signup", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ username, email, password }),
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ username, email, password }),
         });
 
         const data = await res.json();
@@ -36,7 +37,6 @@ export default function signUp(){
             return;
         } 
 
-        localStorage.setItem("accessToken", data.accessToken);
         console.log(`Registered User ${username}`);
         router.push("/dashboard");
 

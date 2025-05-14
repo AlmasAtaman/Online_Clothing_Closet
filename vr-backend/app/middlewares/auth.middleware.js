@@ -1,13 +1,14 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { jwtConfig } from "../config/auth.config.js";
 dotenv.config();
 
 const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  const token = req.cookies.accessToken;
   if (!token) return res.status(401).json({ message: "Unauthorized" });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, jwtConfig.secret);
     req.user = decoded;
     next();
   } catch (err) {

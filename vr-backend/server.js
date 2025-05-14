@@ -1,8 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import cookieSession from 'cookie-session';
 import dotenv from 'dotenv';
-
+import cookieParser from "cookie-parser";
 import db from './app/models/index.js';
 import authRoutes from './app/routes/auth.routes.js';
 import userRoutes from './app/routes/user.routes.js';
@@ -17,6 +16,7 @@ const port = process.env.PORT || 8000;
 // CORS
 app.use(cors({
   origin: "http://localhost:3000",
+  credentials: true 
 }));
 
 // Body parsers
@@ -24,13 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Cookie-session middleware
-app.use(
-  cookieSession({
-    name: "Lebron", // cookie name
-    keys: [process.env.COOKIE_SECRET || "dev-secret"], // secure key
-    httpOnly: true
-  })
-);
+app.use(cookieParser());
 
 //added code for AWS S3
 app.use('/images', uploadRoutes); // So POST /images works
@@ -55,6 +49,11 @@ async function initial() {
     console.log("Seeded roles: user, moderator, admin");
   }
 }
+
+app.get("/debug/cookies", (req, res) => {
+  console.log("Cookies received:", req.cookies);
+  res.send(req.cookies);
+});
 
 app.listen(port, async () => {
   console.log(`Server is running on port ${port}`);

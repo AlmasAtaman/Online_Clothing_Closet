@@ -26,18 +26,24 @@ export const signup = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, email: user.email },
       jwtConfig.secret,
-      { expiresIn: 86400, algorithm: 'HS256', allowInsecureKeySizes: true }
+      { expiresIn: '30d', algorithm: 'HS256', allowInsecureKeySizes: true }
     );
 
     const authorities = user.roles.map(role => `ROLE_${role.name.toUpperCase()}`);
 
 
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "Lax", 
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+
     res.status(200).send({
       id: user.id,
       username: user.username,
       email: user.email,
-      roles: authorities,
-      accessToken: token
+      roles: authorities
     });
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -61,19 +67,24 @@ export const signin = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, email: user.email },
       jwtConfig.secret,
-      { expiresIn: 86400, algorithm: 'HS256', allowInsecureKeySizes: true }
+      { expiresIn: '30d', algorithm: 'HS256', allowInsecureKeySizes: true }
     );
 
-    req.session.token = token;
 
     const authorities = user.roles.map(role => `ROLE_${role.name.toUpperCase()}`);
+
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      secure: false, 
+      sameSite: "Lax", 
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
 
     res.status(200).send({
       id: user.id,
       username: user.username,
       email: user.email,
-      roles: authorities,
-      accessToken: token
+      roles: authorities
     });
 
   } catch (err) {
@@ -82,6 +93,6 @@ export const signin = async (req, res) => {
 };
 
 export const signout = (req, res) => {
-  req.session = null;
+  res.clearCookie("accessToken");
   res.status(200).send({ message: "You've been signed out!" });
 };

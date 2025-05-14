@@ -1,40 +1,44 @@
 "use client"
 
 import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
 import LogOutButton from "../components/LogoutButton";
 import InputFile from "../components/inputFile";
 import ImageGallery from "../components/ImageGallery";
 import { useRouter } from "next/navigation";
 
-interface DecodedToken {
-    id: number;
-    username: string;
-    email: string;
-}
+
 
 export default function Homepage(){
     const [ username, setUsername ] = useState<string | null >(null);
+    const [loading, setLoading] = useState(true);
+    const [hasMounted, setHasMounted] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        const token = localStorage.getItem("accessToken");
-
-        if (!token) {
-            router.push("/login");
-            return;
-        }
-
-        if (token) {
-            try {
-                const decoded = jwtDecode<DecodedToken>(token);
-                setUsername(decoded.username);
-            } catch (error) {
-                console.error("Invalid Token", error);
-                router.push("/login");
-            }
-        }
+        setHasMounted(true);
     }, []);
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const res = await fetch("http://localhost:8000/api/auth/me", {
+                credentials: "include"
+            });
+
+            if (!res.ok) {
+                router.push("/login");
+            } else {
+                const data = await res.json();
+                setUsername(data.username); // check if /me route makes it correct
+            }
+
+            setLoading(false);
+        };
+
+        checkAuth();
+    }, [router]);
+
+    if (!hasMounted || loading) return null;
+
 
     return (
         <div className="container mx-auto p-4">

@@ -6,7 +6,10 @@ export default function LogOutButton() {
     const router = useRouter();
     
     const handleLogout = async () => {
-        localStorage.removeItem("accessToken");
+        await fetch("http://localhost:8000/api/auth/signout", {
+            method: "POST",
+            credentials: "include",
+        });
         router.push("..");
     };
 
