@@ -3,14 +3,13 @@
 import React, { useRef, useState } from "react";
 import axios from "axios";
 
-
-
 export default function UploadForm() {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [autoData, setAutoData] = useState({ name: "", type: "", brand: "" });
   const [submitting, setSubmitting] = useState(false);
   const [key, setKey] = useState<string | null>(null);
+  const [cleanedFile, setCleanedFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,19 +28,35 @@ export default function UploadForm() {
 
     setSubmitting(true);
     try {
-        const res = await axios.post("http://localhost:8000/images", formData, {
+      const res = await axios.post("http://localhost:8000/images", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
-      const { key, clothingData } = res.data;
-      setKey(key);
-      console.log("Clothing data from backend:", clothingData);
+
+      const { clothingData, imageBuffer, originalname } = res.data;
+
+      if (!clothingData?.isClothing) {
+        alert("This image doesn’t look like clothing. Try a different image.");
+        return;
+      }
 
       setAutoData({
-        name: clothingData?.name || "",
-        type: clothingData?.type || "",
-        brand: clothingData?.brand || "",
+        name: clothingData.name || "",
+        type: clothingData.type || "",
+        brand: clothingData.brand || "",
       });
+
+      // Decode base64 string into binary
+      const binary = atob(imageBuffer);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+
+      // Create a File object from buffer
+      const blob = new Blob([bytes], { type: "image/jpeg" });
+      const file = new File([blob], originalname, { type: "image/jpeg" });
+      setCleanedFile(file);
     } catch (err) {
       console.error("Upload failed", err);
       alert("Upload failed");
@@ -51,19 +66,28 @@ export default function UploadForm() {
   };
 
   const handleSubmit = async () => {
-    if (!image || !key) return alert("No image uploaded yet");
+    if (!cleanedFile) return alert("No cleaned image to submit.");
+
+    const formData = new FormData();
+    formData.append("image", cleanedFile);
+    formData.append("name", autoData.name);
+    formData.append("type", autoData.type);
+    formData.append("brand", autoData.brand);
 
     try {
-      await axios.post("http://localhost:8000/images/submit-clothing", {
-        name: autoData.name,
-        type: autoData.type,
-        brand: autoData.brand,
-        key,
-      }, {
+      await axios.post("http://localhost:8000/images/final-submit", formData, {
         withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       alert("Clothing submitted!");
+
+      // Reset
+      setImage(null);
+      setPreviewUrl(null);
+      setAutoData({ name: "", type: "", brand: "" });
+      setCleanedFile(null);
+      if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
       console.error("Submit failed", err);
       alert("Submit failed");
@@ -82,29 +106,39 @@ export default function UploadForm() {
       />
 
       {previewUrl && (
-        <img src={previewUrl} alt="Preview" className="w-full h-auto mb-4 rounded" />
+        <img
+          src={previewUrl}
+          alt="Preview"
+          className="w-full h-auto mb-4 rounded"
+        />
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-2 mt-4">
         <input
           type="text"
           placeholder="Title"
           value={autoData.name}
-          onChange={(e) => setAutoData({ ...autoData, name: e.target.value })}
+          onChange={(e) =>
+            setAutoData({ ...autoData, name: e.target.value })
+          }
           className="w-full border px-3 py-2 rounded"
         />
         <input
           type="text"
           placeholder="Type (e.g. T-shirt)"
           value={autoData.type}
-          onChange={(e) => setAutoData({ ...autoData, type: e.target.value })}
+          onChange={(e) =>
+            setAutoData({ ...autoData, type: e.target.value })
+          }
           className="w-full border px-3 py-2 rounded"
         />
         <input
           type="text"
           placeholder="Brand (optional)"
           value={autoData.brand}
-          onChange={(e) => setAutoData({ ...autoData, brand: e.target.value })}
+          onChange={(e) =>
+            setAutoData({ ...autoData, brand: e.target.value })
+          }
           className="w-full border px-3 py-2 rounded"
         />
       </div>
@@ -113,18 +147,19 @@ export default function UploadForm() {
         <button
           onClick={handleUpload}
           disabled={submitting || !image}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
         >
           {submitting ? "Uploading..." : "Auto-fill"}
         </button>
         <button
           onClick={handleSubmit}
-          disabled={!image}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          disabled={!cleanedFile || !autoData.name || !autoData.type}
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
         >
           Submit
         </button>
       </div>
     </div>
   );
+
 }

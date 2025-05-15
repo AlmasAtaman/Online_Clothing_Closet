@@ -18,16 +18,34 @@ export async function getClothingInfoFromImage(imagePath) {
         mimeType: "image/jpeg",
       },
     },
-    "Return only a JSON object with: {name, type, brand}. If unsure, use null.",
+    `You are a fashion labeling assistant. First, determine if this image shows a clothing item (with no humans or animals).
+
+    - If it IS a valid clothing item, return ONLY a JSON object in this format:
+
+    {
+      "isClothing": true,
+      "name": "Slim Fit Hoodie",
+      "type": "Hoodie",
+      "brand": "Nike"
+    }
+
+    - If it is NOT clothing, return:
+
+    {
+      "isClothing": false
+    }
+
+    Do not include any explanation or code blocks. Return pure JSON only.`
+    ,
   ]);
 
   const text = result.response.text();
 
   try {
     // Extract JSON using regex
-    const match = text.match(/```json\n([\s\S]+?)```/) || text.match(/({[\s\S]+})/);
-    const json = match ? match[1] : text;
-    return JSON.parse(json);
+    const match = text.match(/{[\s\S]*}/);
+    if (!match) throw new Error("No JSON found in Gemini response");
+    return JSON.parse(match[0]);
   } catch (err) {
     console.error("Failed to parse Gemini response:", text);
     return null;
