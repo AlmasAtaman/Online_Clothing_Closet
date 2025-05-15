@@ -20,10 +20,22 @@ model User{
   email     String  @unique
   password  String
   roles     Role[]  @relation("UserRoles")
+  clothing  Clothing[]
 }
 
 model Role {
   id        Int     @id @default(autoincrement())
   name      String  @unique
   users     User[]   @relation("UserRoles")
+}
+
+
+model Clothing {
+  id        Int     @id @default(autoincrement())
+  name      String?
+  type      String?
+  brand     String?
+  imageUrl  String
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
 }

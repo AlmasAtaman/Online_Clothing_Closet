@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import LogOutButton from "../components/LogoutButton";
-import InputFile from "../components/inputFile";
+import UploadForm from "../components/UploadForm";
 import ImageGallery from "../components/ImageGallery";
 import { useRouter } from "next/navigation";
 
@@ -47,7 +47,7 @@ export default function Homepage(){
                 <LogOutButton />
             </div>
             <div className="mb-8">
-                <InputFile />
+                <UploadForm />
             </div>
             <div>
                 <h2 className="text-xl font-semibold mb-4">Your Images</h2>

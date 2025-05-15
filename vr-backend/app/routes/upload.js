@@ -3,11 +3,17 @@ import multer, { memoryStorage } from 'multer';
 import { getUserPresignedUrls, uploadToS3 } from '../../s3.mjs';
 import authMiddleware from '../middlewares/auth.middleware.js';
 import { removeBackground } from "../utils/removeBackground.js";
+import { getClothingInfoFromImage } from "../utils/geminiLabeler.js";
+import { PrismaClient } from '@prisma/client';
 
 
+const prisma = new PrismaClient();
 const router = express.Router();
 const storage = memoryStorage();
 const upload = multer({storage});
+
+
+
 
 router.post("/", authMiddleware, upload.single("image"), async (req, res) => {
     const {file} = req;
@@ -20,30 +26,50 @@ router.post("/", authMiddleware, upload.single("image"), async (req, res) => {
     const tempImagePath = `temp_${Date.now()}_${file.originalname}`;
     fs.writeFileSync(tempImagePath, file.buffer);
 
-    // 2. Remove background
+  try {
+    // 1. Remove background
     const cleanedImagePath = await removeBackground(tempImagePath);
 
-    // 3. Read cleaned file and upload to S3
+    // 2. Upload cleaned image to S3
     const cleanedBuffer = fs.readFileSync(cleanedImagePath);
     const cleanedFile = {
-    ...file,
-    buffer: cleanedBuffer,
-    originalname: cleanedImagePath.split("/").pop()
+      ...file,
+      buffer: cleanedBuffer,
+      originalname: cleanedImagePath.split("/").pop()
     };
+
     const { error, key } = await uploadToS3({ file: cleanedFile, userId });
+
+    if (error) return res.status(500).json({ message: error.message });
+
+    //the gemini call
+    const clothingData = await getClothingInfoFromImage(cleanedImagePath);
+    console.log("Gemini result:", clothingData);
+
 
     fs.unlinkSync(tempImagePath);
     fs.unlinkSync(cleanedImagePath);
 
 
+    const cleaned = {
+      name: clothingData?.name || "",
+      type: clothingData?.type || "",
+      brand: clothingData?.brand || "",
+    };
 
-    if (error) return res.status(500).json({ message: error.message });
-    return res.status(201).json({ key });
+
+    return res.status(201).json({ key, clothingData: cleaned });
+
+    } catch (err) {
+        console.error("Upload failed:", err);
+        return res.status(500).json({ message: "Upload failed" });
+    }
+
 });
 
 router.get('/', authMiddleware, async (req, res) => {
     const userId = req.user.id;
-    console.log("Fetching images for user ID:", userId); // ← ADD THIS LINE
+    console.log("Fetching images for user ID:", userId);
 
     if (!userId) return res.status(400).json({message: "Bad Request"});
 
@@ -51,6 +77,33 @@ router.get('/', authMiddleware, async (req, res) => {
     if (error) return res.status(400).json({message: error.message});
 
     return res.json({ presignedUrls });
-})
+});
+
+
+router.post("/submit-clothing", authMiddleware, async (req, res) => {
+  const { name, type, brand, key } = req.body;
+  const userId = req.user.id;
+
+  if (!key) return res.status(400).json({ message: "Missing image key" });
+
+  try {
+    await prisma.clothing.create({
+      data: {
+        userId,
+        imageUrl: key,
+        name: name || null,
+        type: type || null,
+        brand: brand || null,
+      },
+    });
+    return res.status(201).json({ message: "Clothing saved" });
+  } catch (err) {
+    console.error("Failed to save clothing:", err);
+    return res.status(500).json({ message: "Failed to save clothing" });
+  }
+});
+
+
+
 
 export default router;
