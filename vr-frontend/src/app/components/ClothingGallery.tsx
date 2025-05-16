@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import axios from "axios";
+
 
 type Clothing = {
   key: string;
@@ -11,7 +12,7 @@ type Clothing = {
   brand: string;
 };
 
-export default function ClothingGallery() {
+const ClothingGallery = forwardRef((props, ref) => {
   const [clothingItems, setClothingItems] = useState<Clothing[]>([]);
 
     const fetchImages = async () => {
@@ -41,9 +42,13 @@ export default function ClothingGallery() {
     }
     };
 
-  useEffect(() => {
+    useImperativeHandle(ref, () => ({
+    refresh: fetchImages,
+    }), []);
+
+    useEffect(() => {
     fetchImages();
-  }, []);
+    }, []);
 
   return (
     <div className="mt-6">
@@ -70,4 +75,7 @@ export default function ClothingGallery() {
       </div>
     </div>
   );
-}
+})
+
+
+export default ClothingGallery;

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import LogOutButton from "../components/LogoutButton";
 import UploadModal from "../components/UploadModal";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ export default function Homepage(){
     const [hasMounted, setHasMounted] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const router = useRouter();
+    const galleryRef = useRef<any>(null);
 
     useEffect(() => {
         setHasMounted(true);
@@ -57,13 +58,16 @@ export default function Homepage(){
             </div>
             <div>
                 <h2 className="text-xl font-semibold mb-4">Your Images</h2>
-                <ClothingGallery />
+                <ClothingGallery ref={galleryRef} />
             </div>
 
             <UploadModal
             show={showModal}
             onClose={() => setShowModal(false)}
-            onUploadComplete={() => setShowModal(false)}
+            onUploadComplete={() => {
+                setShowModal(false);
+                galleryRef.current?.refresh();
+            }}
             />
 
         </div>
