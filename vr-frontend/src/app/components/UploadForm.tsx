@@ -3,7 +3,7 @@
 import React, { useRef, useState } from "react";
 import axios from "axios";
 
-export default function UploadForm() {
+export default function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void }) {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [autoData, setAutoData] = useState({ name: "", type: "", brand: "" });
@@ -88,6 +88,8 @@ export default function UploadForm() {
       setAutoData({ name: "", type: "", brand: "" });
       setCleanedFile(null);
       if (inputRef.current) inputRef.current.value = "";
+      if (onUploadComplete) onUploadComplete();
+
     } catch (err) {
       console.error("Submit failed", err);
       alert("Submit failed");

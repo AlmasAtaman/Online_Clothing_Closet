@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import LogOutButton from "../components/LogoutButton";
-import UploadForm from "../components/UploadForm";
-import ImageGallery from "../components/ImageGallery";
+import UploadModal from "../components/UploadModal";
 import { useRouter } from "next/navigation";
+import ClothingGallery from "../components/ClothingGallery";
 
 
 
@@ -12,6 +12,7 @@ export default function Homepage(){
     const [ username, setUsername ] = useState<string | null >(null);
     const [loading, setLoading] = useState(true);
     const [hasMounted, setHasMounted] = useState(false);
+    const [showModal, setShowModal] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -46,13 +47,25 @@ export default function Homepage(){
                 <h1 className="text-2xl font-bold">Welcome, {username ? username : "Guest"}</h1>
                 <LogOutButton />
             </div>
-            <div className="mb-8">
-                <UploadForm />
+            <div className="mb-8 text-right">
+            <button
+                onClick={() => setShowModal(true)}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+                ➕ Add Clothing
+            </button>
             </div>
             <div>
                 <h2 className="text-xl font-semibold mb-4">Your Images</h2>
-                <ImageGallery />
+                <ClothingGallery />
             </div>
+
+            <UploadModal
+            show={showModal}
+            onClose={() => setShowModal(false)}
+            onUploadComplete={() => setShowModal(false)}
+            />
+
         </div>
     );
 }

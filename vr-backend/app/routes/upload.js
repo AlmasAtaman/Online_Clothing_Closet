@@ -5,6 +5,7 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 import { removeBackground } from "../utils/removeBackground.js";
 import { getClothingInfoFromImage } from "../utils/geminiLabeler.js";
 import { PrismaClient } from '@prisma/client';
+import { deleteImage } from "../controllers/image.controller.js";
 
 
 const prisma = new PrismaClient();
@@ -65,16 +66,38 @@ router.post("/", authMiddleware, upload.single("image"), async (req, res) => {
 });
 
 
-router.get('/', authMiddleware, async (req, res) => {
-    const userId = req.user.id;
-    console.log("Fetching images for user ID:", userId);
+router.get("/", authMiddleware, async (req, res) => {
+  const userId = req.user.id;
 
-    if (!userId) return res.status(400).json({message: "Bad Request"});
+  if (!userId) return res.status(400).json({ message: "Bad Request" });
 
-    const {error, presignedUrls} = await getUserPresignedUrls(userId);
-    if (error) return res.status(400).json({message: error.message});
+  try {
+    const clothingFromDb = await prisma.clothing.findMany({
+      where: { userId },
+    });
 
-    return res.json({ presignedUrls });
+    const { error, presignedUrls } = await getUserPresignedUrls(userId);
+    if (error) return res.status(400).json({ message: error.message });
+
+    const enrichedItems = clothingFromDb.map((item) => {
+      const fullUrl = presignedUrls.find((url) =>
+        url.includes(item.imageUrl)
+      );
+
+      return {
+        key: item.imageUrl,
+        url: fullUrl || "", // fallback if URL not found
+        name: item.name || "Unnamed",
+        type: item.type || "Unknown",
+        brand: item.brand || "No brand",
+      };
+    });
+
+    return res.json({ clothingItems: enrichedItems });
+  } catch (err) {
+    console.error("Error fetching clothing items:", err);
+    return res.status(500).json({ message: "Failed to load items" });
+  }
 });
 
 
@@ -130,6 +153,7 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
   }
 });
 
+router.delete("/:key", authMiddleware, deleteImage);
 
 
 
