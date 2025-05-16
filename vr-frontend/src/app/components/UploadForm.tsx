@@ -28,7 +28,7 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
 
     setSubmitting(true);
     try {
-      const res = await axios.post("http://localhost:8000/images", formData, {
+      const res = await axios.post("http://localhost:8000/api/images", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -75,7 +75,7 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
     formData.append("brand", autoData.brand);
 
     try {
-      await axios.post("http://localhost:8000/images/final-submit", formData, {
+      await axios.post("http://localhost:8000/api/images/final-submit", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -107,13 +107,13 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
         className="mb-2"
       />
 
-      {previewUrl && (
+      {previewUrl ? (
         <img
           src={previewUrl}
           alt="Preview"
           className="w-full h-auto mb-4 rounded"
         />
-      )}
+      ) : null}
 
       <div className="space-y-2 mt-4">
         <input

@@ -1,18 +1,30 @@
-import prisma from '../utils/prismaClient.js';
-import { deleteFileFromS3 } from '../utils/s3Helpers.js';
+import { PrismaClient } from "@prisma/client";
+import { deleteFromS3 } from '../../s3.mjs';
+
+
+const prisma = new PrismaClient();
+
 
 export const deleteImage = async (req, res) => {
+  const userId = req.user.id;
   const key = req.params.key;
 
+
   try {
-    // Delete image record from database
-    await prisma.image.delete({ where: { key } });
+    // Delete from S3
+    await deleteFromS3({ key });
 
-    await deleteFileFromS3(key);
+    // Delete from DB
+    await prisma.clothing.deleteMany({
+      where: {
+        userId,
+        imageUrl: key,
+      },
+    });
 
-    res.status(200).json({ message: 'Image deleted successfully' });
-  } catch (error) {
-    console.error("Delete error:", error);
-    res.status(500).json({ message: 'Error deleting image' });
+    return res.status(200).json({ message: "Image deleted successfully" });
+  } catch (err) {
+    console.error("Delete failed:", err);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

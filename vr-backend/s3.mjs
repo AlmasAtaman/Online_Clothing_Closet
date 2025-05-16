@@ -1,20 +1,14 @@
-import { S3Client, PutObjectCommand, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, ListObjectsV2Command, GetObjectCommand, DeleteObjectCommand  } from '@aws-sdk/client-s3';
 import { v4 as uuid } from 'uuid';
 import dotenv from 'dotenv';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { s3Client as s3 } from "./s3Client.js";
+
 
 dotenv.config()
 
 const bucket = process.env.BUCKET;
 
-
-const s3 = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
-});
 
 
 console.log("Loaded AWS region:", process.env.AWS_REGION); // Debug log
@@ -66,4 +60,22 @@ export const getUserPresignedUrls = async (userId) => {
         console.error("Presign error:", error);
         return { error };
     }
-}
+};
+
+export async function deleteFromS3({ key }) {
+  const bucket = process.env.BUCKET;
+  if (!bucket) throw new Error("Missing AWS_BUCKET_NAME in env");
+
+  const command = new DeleteObjectCommand({
+    Bucket: bucket,
+    Key: key,
+  });
+
+  try {
+    await s3.send(command);
+    console.log(`Deleted ${key} from S3`);
+  } catch (err) {
+    console.error("S3 deletion error:", err);
+    throw err;
+  }
+};

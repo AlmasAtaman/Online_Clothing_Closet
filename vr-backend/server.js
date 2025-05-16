@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 //added code for AWS S3
-app.use('/images', uploadRoutes); // So POST /images works
+app.use('/api/images', uploadRoutes); // So POST /images works
 //make sure to only change code here
 
 

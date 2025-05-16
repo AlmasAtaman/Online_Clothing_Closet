@@ -17,8 +17,8 @@ const ClothingGallery = forwardRef((props, ref) => {
 
     const fetchImages = async () => {
     try {
-        const res = await axios.get("http://localhost:8000/images", {
-        withCredentials: true,
+        const res = await axios.get("http://localhost:8000/api/images", {
+          withCredentials: true,
         });
         console.log("response data", res.data);
         setClothingItems(res.data.clothingItems || []);
@@ -33,9 +33,9 @@ const ClothingGallery = forwardRef((props, ref) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
 
     try {
-        await axios.delete(`http://localhost:8000/api/images/${key}`, {
+      await axios.delete(`http://localhost:8000/api/images/${encodeURIComponent(key)}`, {
         withCredentials: true,
-        });
+      });
         setClothingItems((prev) => prev.filter((item) => item.key !== key));
     } catch (err) {
         console.error("Error deleting image:", err);
@@ -60,7 +60,13 @@ const ClothingGallery = forwardRef((props, ref) => {
         {Array.isArray(clothingItems) &&
         clothingItems.map((item, index) => (
         <div key={item.key || item.url || index} className="border rounded p-3 shadow">
-            <img src={item.url} alt={item.name} className="w-full h-48 object-cover" />
+            {item.url ? (
+              <img src={item.url} alt={item.name} className="w-full h-48 object-cover" />
+            ) : (
+              <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-500 text-sm">
+                No Image
+              </div>
+            )}
             <p className="font-medium mt-2">{item.name}</p>
             <p className="text-sm text-gray-600">{item.type}</p>
             <p className="text-sm text-gray-600">{item.brand}</p>
