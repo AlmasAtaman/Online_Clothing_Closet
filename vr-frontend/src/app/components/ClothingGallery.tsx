@@ -14,6 +14,9 @@ type Clothing = {
 
 const ClothingGallery = forwardRef((props, ref) => {
   const [clothingItems, setClothingItems] = useState<Clothing[]>([]);
+  const [selectedItem, setSelectedItem] = useState<Clothing | null>(null);
+  
+
 
     const fetchImages = async () => {
     try {
@@ -57,9 +60,13 @@ const ClothingGallery = forwardRef((props, ref) => {
         <p className="text-gray-500 text-center col-span-full">Your closet is empty. Upload something!</p>
         )}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {Array.isArray(clothingItems) &&
+      {Array.isArray(clothingItems) &&
         clothingItems.map((item, index) => (
-        <div key={item.key || item.url || index} className="border rounded p-3 shadow">
+          <div
+            key={item.key || item.url || index}
+            className="border rounded p-3 shadow cursor-pointer"
+            onClick={() => setSelectedItem(item)}
+          >
             {item.url ? (
               <img src={item.url} alt={item.name} className="w-full h-48 object-cover" />
             ) : (
@@ -71,13 +78,75 @@ const ClothingGallery = forwardRef((props, ref) => {
             <p className="text-sm text-gray-600">{item.type}</p>
             <p className="text-sm text-gray-600">{item.brand}</p>
             <button
-            onClick={() => handleDelete(item.key)}
-            className="mt-2 bg-red-500 text-white px-2 py-1 rounded text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(item.key);
+              }}
+              className="mt-2 bg-red-500 text-white px-2 py-1 rounded text-sm"
             >
-            Delete
+              Delete
             </button>
+          </div>
+      ))}
+
+
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 text-white">
+          <div className="relative flex bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl overflow-hidden">
+
+            {/* Left Arrow */}
+            <button
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 text-3xl px-4 text-white hover:text-gray-400 z-10"
+              onClick={() => {
+                const currentIndex = clothingItems.findIndex(item => item.key === selectedItem.key);
+                if (currentIndex > 0) setSelectedItem(clothingItems[currentIndex - 1]);
+              }}
+            >
+              ❮
+            </button>
+
+            {/* Right Arrow */}
+            <button
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 text-3xl px-4 text-white hover:text-gray-400 z-10"
+              onClick={() => {
+                const currentIndex = clothingItems.findIndex(item => item.key === selectedItem.key);
+                if (currentIndex < clothingItems.length - 1)
+                  setSelectedItem(clothingItems[currentIndex + 1]);
+              }}
+            >
+              ❯
+            </button>
+
+            {/* Image Section */}
+            <div className="w-1/2 bg-gray-800 p-4 flex justify-center items-center border-r border-gray-700">
+              <img src={selectedItem.url} alt={selectedItem.name} className="max-h-[400px] rounded-lg" />
+            </div>
+
+            {/* Info Section */}
+            <div className="w-1/2 p-6 flex flex-col justify-between">
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"
+              >
+                ✕
+              </button>
+              <div>
+                <h2 className="text-2xl font-semibold mb-2">{selectedItem.name}</h2>
+                <p className="mb-1"><strong>Type:</strong> {selectedItem.type}</p>
+                <p className="mb-1"><strong>Brand:</strong> {selectedItem.brand}</p>
+              </div>
+              <div className="mt-6">
+                <button className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                  Edit
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        ))}
+      )}
+
+
+
       </div>
     </div>
   );

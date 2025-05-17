@@ -20,6 +20,8 @@ export async function getClothingInfoFromImage(imagePath) {
     },
     `You are a fashion labeling assistant. First, determine if this image shows a clothing item (with no humans or animals).
 
+    - Only return tags from this list for "type": ["T-shirt", "Jacket", "Pants", "Shoes", "Hat", "Sweater", "Shorts", "Dress", "Skirt"].
+    - Never invent new types or return anything outside this list.
     - If it IS a valid clothing item, return ONLY a JSON object in this format:
 
     {
