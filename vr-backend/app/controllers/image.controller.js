@@ -17,8 +17,8 @@ export const deleteImage = async (req, res) => {
     // Delete from DB
     await prisma.clothing.deleteMany({
       where: {
-        userId,
-        imageUrl: key,
+        userId: req.user.id,
+        key: key
       },
     });
 

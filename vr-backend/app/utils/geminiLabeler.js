@@ -18,26 +18,43 @@ export async function getClothingInfoFromImage(imagePath) {
         mimeType: "image/jpeg",
       },
     },
-    `You are a fashion labeling assistant. First, determine if this image shows a clothing item (with no humans or animals).
+    `You are a fashion labeling assistant. You will be given an image of a single clothing item (no human). Your job is to detect whether the image contains clothing, and if so, fill in its metadata. Return a JSON object only, with **only the allowed values** listed below.
 
-    - Only return tags from this list for "type": ["T-shirt", "Jacket", "Pants", "Shoes", "Hat", "Sweater", "Shorts", "Dress", "Skirt"].
-    - Never invent new types or return anything outside this list.
-    - If it IS a valid clothing item, return ONLY a JSON object in this format:
+      Field rules:
 
-    {
-      "isClothing": true,
-      "name": "Slim Fit Hoodie",
-      "type": "Hoodie",
-      "brand": "Nike"
-    }
+      - "type": one of ["T-shirt", "Jacket", "Pants", "Shoes", "Hat", "Sweater", "Shorts", "Dress", "Skirt"]
+      - "occasion": one of ["Casual", "Formal", "Party", "Athletic"]
+      - "style": one of ["Streetwear", "Minimalist", "Old Money", "Y2K", "Preppy"]
+      - "fit": one of ["Slim Fit", "Regular Fit", "Oversized Fit", "Crop Fit", "Skinny", "Tapered"]
+      - "color": one of basic colors like ["Black", "White", "Red", "Blue", "Green", "Yellow", "Gray", "Brown", "Purple", "Pink"]
+      - "material": one of ["Cotton", "Linen", "Denim", "Leather", "Knit", "Polyester"]
+      - "season": one of ["Spring", "Summer", "Fall", "Winter"]
 
-    - If it is NOT clothing, return:
+      Optional fields are okay to leave out or return as null.
 
-    {
-      "isClothing": false
-    }
+      Your response MUST be one of these:
 
-    Do not include any explanation or code blocks. Return pure JSON only.`
+      1. For valid clothing:
+      {
+        "isClothing": true,
+        "name": "Slim Fit Hoodie",
+        "type": "Sweater",
+        "brand": "Nike",
+        "occasion": "Casual",
+        "style": "Streetwear",
+        "fit": "Slim Fit",
+        "color": "Black",
+        "material": "Cotton",
+        "season": "Fall"
+      }
+
+      2. If image is not clothing:
+      {
+        "isClothing": false
+      }
+
+      Only return valid JSON. Do not include explanations, quotes, comments, or formatting outside the object.
+      `
     ,
   ]);
 

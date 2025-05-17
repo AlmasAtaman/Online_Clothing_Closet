@@ -15,6 +15,9 @@ type Clothing = {
 const ClothingGallery = forwardRef((props, ref) => {
   const [clothingItems, setClothingItems] = useState<Clothing[]>([]);
   const [selectedItem, setSelectedItem] = useState<Clothing | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ name: "", type: "", brand: "" });
+
   
 
 
@@ -91,9 +94,17 @@ const ClothingGallery = forwardRef((props, ref) => {
 
 
       {selectedItem && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 text-white">
-          <div className="relative flex bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl overflow-hidden">
-
+            <div
+              className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 text-white"
+              onClick={() => {
+                setSelectedItem(null);
+                setIsEditing(false);
+              }}
+            >
+            <div
+              className="relative flex bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
             {/* Left Arrow */}
             <button
               className="absolute left-0 top-1/2 transform -translate-y-1/2 text-3xl px-4 text-white hover:text-gray-400 z-10"
@@ -130,15 +141,84 @@ const ClothingGallery = forwardRef((props, ref) => {
               >
                 ✕
               </button>
-              <div>
-                <h2 className="text-2xl font-semibold mb-2">{selectedItem.name}</h2>
-                <p className="mb-1"><strong>Type:</strong> {selectedItem.type}</p>
-                <p className="mb-1"><strong>Brand:</strong> {selectedItem.brand}</p>
-              </div>
+              {isEditing ? (
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                    placeholder="Name"
+                  />
+                  <input
+                    type="text"
+                    value={editForm.type}
+                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                    className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                    placeholder="Type"
+                  />
+                  <input
+                    type="text"
+                    value={editForm.brand}
+                    onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
+                    className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                    placeholder="Brand"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={ async () => {
+                        const updated = { ...selectedItem, ...editForm };
+                        try {
+                          await axios.patch(
+                            `http://localhost:8000/api/images/${selectedItem.key}`,
+                            editForm,
+                            { withCredentials: true }
+                          );
+                          setSelectedItem(updated);
+                          setClothingItems(prev =>
+                            prev.map(item => item.key === updated.key ? updated : item)
+                          );
+                          setIsEditing(false);
+                        } catch (err) {
+                          console.error("Failed to update clothing item:", err);
+                          alert("Failed to save changes.");
+                        }
+                      }}
+                      className="bg-green-600 px-4 py-2 rounded text-white hover:bg-green-700"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <h2 className="text-2xl font-semibold mb-2">{selectedItem.name}</h2>
+                  <p className="mb-1"><strong>Type:</strong> {selectedItem.type}</p>
+                  <p className="mb-1"><strong>Brand:</strong> {selectedItem.brand}</p>
+                </div>
+              )}
+
               <div className="mt-6">
-                <button className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                  Edit
-                </button>
+              <button
+                className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={() => {
+                  setIsEditing(true);
+                  setEditForm({
+                    name: selectedItem.name,
+                    type: selectedItem.type,
+                    brand: selectedItem.brand,
+                  });
+                }}
+              >
+                Edit
+              </button>
+
               </div>
             </div>
           </div>

@@ -6,6 +6,8 @@ import { removeBackground } from "../utils/removeBackground.js";
 import { getClothingInfoFromImage } from "../utils/geminiLabeler.js";
 import { PrismaClient } from '@prisma/client';
 import { deleteImage } from "../controllers/image.controller.js";
+import { v4 as uuidv4 } from "uuid";
+
 
 
 const prisma = new PrismaClient();
@@ -81,11 +83,11 @@ router.get("/", authMiddleware, async (req, res) => {
 
     const enrichedItems = clothingFromDb.map((item) => {
       const fullUrl = presignedUrls.find((url) =>
-        url.includes(item.imageUrl)
+        url.includes(item.key)
       );
 
       return {
-        key: item.imageUrl,
+        key: item.key,
         url: fullUrl || "", // fallback if URL not found
         name: item.name || "Unnamed",
         type: item.type || "Unknown",
@@ -111,7 +113,8 @@ router.post("/submit-clothing", authMiddleware, async (req, res) => {
     await prisma.clothing.create({
       data: {
         userId,
-        imageUrl: key,
+        key,
+        url: key,
         name: name || null,
         type: type || null,
         brand: brand || null,
@@ -126,7 +129,11 @@ router.post("/submit-clothing", authMiddleware, async (req, res) => {
 
 
 router.post("/final-submit", authMiddleware, upload.single("image"), async (req, res) => {
-  const { name, type, brand } = req.body;
+  const {
+    name, type, brand,
+    occasion, style, fit,
+    color, material, season, notes
+  } = req.body;
   const userId = req.user.id;
   const file = req.file;
 
@@ -136,14 +143,23 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
     const { error, key } = await uploadToS3({ file, userId });
     if (error) return res.status(500).json({ message: error.message });
 
-    await prisma.clothing.create({
+
+    const clothing = await prisma.clothing.create({
       data: {
-        userId,
-        imageUrl: key,
-        name: name || null,
-        type: type || null,
+        userId: userId,
+        key,     
+        url: key,  
+        name,
+        type,
         brand: brand || null,
-      },
+        occasion: occasion || null,
+        style: style || null,
+        fit: fit || null,
+        color: color || null,
+        material: material || null,
+        season: season || null,
+        notes: notes || null,
+      }
     });
 
     return res.status(201).json({ message: "Clothing saved" });
@@ -155,6 +171,28 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
 
 router.delete("/:key", authMiddleware, deleteImage);
 
+router.patch("/images/:key", async (req, res) => {
+  const { key } = req.params;
+  const {
+    name, type, brand, occasion, style, fit,
+    color, material, season, notes
+  } = req.body;
+
+  try {
+    const updated = await prisma.clothing.update({
+      where: { key },
+      data: {
+        name, type, brand, occasion, style, fit,
+        color, material, season, notes,
+      },
+    });
+
+    res.json({ message: "Item updated", item: updated });
+  } catch (error) {
+    console.error("Failed to update item:", error);
+    res.status(500).json({ error: "Failed to update item" });
+  }
+});
 
 
 export default router;
