@@ -58,19 +58,20 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
         alert("This image doesn’t look like clothing. Try a different image.");
         return;
       }
-
-      setAutoData({
-        name: clothingData.name || "",
-        type: clothingData.type || "",
-        brand: clothingData.brand || "",
-        occasion: clothingData.occasion || "",
-        style: clothingData.style || "",
-        fit: clothingData.fit || "",
-        color: clothingData.color || "",
-        material: clothingData.material || "",
-        season: clothingData.season || "",
+      console.log("Gemini autofill data:", clothingData);
+      setAutoData((prev) => ({
+        ...prev,
+        name: clothingData?.name ?? prev.name,
+        type: clothingData?.type ?? prev.type,
+        brand: clothingData?.brand ?? prev.brand,
+        occasion: clothingData?.occasion ?? prev.occasion,
+        style: clothingData?.style ?? prev.style,
+        fit: clothingData?.fit ?? prev.fit,
+        color: clothingData?.color ?? prev.color,
+        material: clothingData?.material ?? prev.material,
+        season: clothingData?.season ?? prev.season,
         notes: "",
-      });
+      }));
 
 
       // Decode base64 string into binary
@@ -137,61 +138,100 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
       <span className="text-sm font-medium">Upload Mode:</span>
       <button
         onClick={() => setMode(mode === "basic" ? "advanced" : "basic")}
-        className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm"
+        className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-600 text-sm shadow"
       >
-        {mode === "basic" ? "Switch to Advanced" : "Switch to Basic"}
+        {mode === "basic" ? "Switch to Advanced Mode" : "Switch to Basic Mode"}
       </button>
     </div>
-      <input
-        type="file"
-        ref={inputRef}
-        accept="image/*"
-        onChange={handleFileChange}
-        className="mb-2"
-      />
-
-      {previewUrl ? (
-        <img
-          src={previewUrl}
-          alt="Preview"
-          className="w-full max-h-80 object-contain mb-4 rounded"
+      <label className="block w-full cursor-pointer mb-2 text-white text-sm font-medium">
+        <input
+          type="file"
+          ref={inputRef}
+          accept="image/*"
+          onChange={handleFileChange}
+          className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
         />
-      ) : null}
+      </label>
 
-      <div className="space-y-2 mt-4">
-        {["name", "type", "brand"].map((field) => (
-          <input
-            key={field}
-            type="text"
-            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-            value={autoData[field as keyof typeof autoData]}
-            onChange={(e) =>
-              setAutoData((prev) => ({
-                ...prev,
-                [field]: e.target.value,
-              }))
-            }
-            className="w-full border px-3 py-2 rounded"
-          />
-        ))}
+      {mode === "advanced" ? (
+        <div className="flex flex-col md:flex-row gap-6 mt-4">
+          {/* Image Preview Left */}
+          {previewUrl && (
+            <div className="flex-1 max-w-sm">
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full object-contain rounded border"
+              />
+            </div>
+          )}
 
-        {mode === "advanced" &&
-          ["occasion", "style", "fit", "color", "material", "season", "notes"].map((field) => (
+          {/* Form Fields Right */}
+          <div className="flex-1 space-y-3">
             <input
-              key={field}
               type="text"
-              placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-              value={autoData[field as keyof typeof autoData]}
-              onChange={(e) =>
-                setAutoData((prev) => ({
-                  ...prev,
-                  [field]: e.target.value,
-                }))
-              }
-              className="w-full border px-3 py-2 rounded"
+              placeholder="Name"
+              value={autoData.name}
+              onChange={(e) => setAutoData({ ...autoData, name: e.target.value })}
+              className="w-full border px-3 py-3 rounded text-lg"
             />
-          ))}
-      </div>
+            <div className="grid grid-cols-2 gap-2">
+              {["type", "brand", "occasion", "style", "fit", "color", "material", "season"].map((field) => (
+                <input
+                  key={field}
+                  type="text"
+                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                  value={autoData[field as keyof typeof autoData] || ""}
+                  onChange={(e) =>
+                    setAutoData({
+                      ...autoData,
+                      [field]: e.target.value,
+                    })
+                  }
+                  className="border px-3 py-2 rounded w-full"
+                />
+              ))}
+            </div>
+
+            <textarea
+              placeholder="Notes (optional)"
+              value={autoData.notes}
+              onChange={(e) => setAutoData({ ...autoData, notes: e.target.value })}
+              className="w-full border px-3 py-2 rounded h-24"
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* BASIC Mode */}
+          {previewUrl && (
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full max-h-80 object-contain mb-4 rounded"
+            />
+          )}
+
+          <div className="space-y-2 mt-4">
+            {["name", "type", "brand"].map((field) => (
+              <input
+                key={field}
+                type="text"
+                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                value={autoData[field as ClothingFields]}
+                onChange={(e) =>
+                  setAutoData((prev) => ({
+                    ...prev,
+                    [field]: e.target.value,
+                  }))
+                }
+                className="w-full border px-3 py-2 rounded"
+              />
+            ))}
+          </div>
+        </>
+      )}
+
 
       <div className="flex gap-4 mt-4">
         <button
