@@ -10,13 +10,32 @@ type Clothing = {
   name: string;
   type: string;
   brand: string;
+  occasion?: string;
+  style?: string;
+  fit?: string;
+  color?: string;
+  material?: string;
+  season?: string;
+  notes?: string;
 };
+
 
 const ClothingGallery = forwardRef((props, ref) => {
   const [clothingItems, setClothingItems] = useState<Clothing[]>([]);
   const [selectedItem, setSelectedItem] = useState<Clothing | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ name: "", type: "", brand: "" });
+  const [editForm, setEditForm] = useState({
+    name: "",
+    type: "",
+    brand: "",
+    occasion: "",
+    style: "",
+    fit: "",
+    color: "",
+    material: "",
+    season: "",
+    notes: ""
+  });
 
   
 
@@ -142,60 +161,117 @@ const ClothingGallery = forwardRef((props, ref) => {
                 ✕
               </button>
               {isEditing ? (
-                <div className="space-y-4">
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
-                    placeholder="Name"
-                  />
-                  <input
-                    type="text"
-                    value={editForm.type}
-                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-                    className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
-                    placeholder="Type"
-                  />
-                  <input
-                    type="text"
-                    value={editForm.brand}
-                    onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
-                    className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
-                    placeholder="Brand"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={ async () => {
-                        const updated = { ...selectedItem, ...editForm };
-                        try {
-                          await axios.patch(
-                            `http://localhost:8000/api/images/${selectedItem.key}`,
-                            editForm,
-                            { withCredentials: true }
-                          );
-                          setSelectedItem(updated);
-                          setClothingItems(prev =>
-                            prev.map(item => item.key === updated.key ? updated : item)
-                          );
-                          setIsEditing(false);
-                        } catch (err) {
-                          console.error("Failed to update clothing item:", err);
-                          alert("Failed to save changes.");
-                        }
-                      }}
-                      className="bg-green-600 px-4 py-2 rounded text-white hover:bg-green-700"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setIsEditing(false)}
-                      className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
-                    >
-                      Cancel
-                    </button>
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Name"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.type}
+                      onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Type"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.brand}
+                      onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Brand"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.occasion}
+                      onChange={(e) => setEditForm({ ...editForm, occasion: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Occasion"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.style}
+                      onChange={(e) => setEditForm({ ...editForm, style: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Style"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.fit}
+                      onChange={(e) => setEditForm({ ...editForm, fit: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Fit"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.color}
+                      onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Color"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.material}
+                      onChange={(e) => setEditForm({ ...editForm, material: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Material"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.season}
+                      onChange={(e) => setEditForm({ ...editForm, season: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Season"
+                    />
+                    <textarea
+                      value={editForm.notes}
+                      onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Notes"
+                      rows={3}
+                    />
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          const updated = { ...selectedItem, ...editForm };
+                          try {
+                            const cleanKey = selectedItem.key; 
+
+                            console.log("Clean key:", cleanKey);
+
+                            await axios.patch(
+                              "http://localhost:8000/api/images/update",
+                              { key: cleanKey, ...editForm },
+                              { withCredentials: true }
+                            );
+
+
+                            setSelectedItem(updated);
+                            setClothingItems(prev =>
+                              prev.map(item => item.key === updated.key ? updated : item)
+                            );
+                            setIsEditing(false);
+                          } catch (err) {
+                            console.error("Failed to update clothing item:", err);
+                            alert("Failed to save changes.");
+                          }
+                        }}
+                        className="bg-green-600 px-4 py-2 rounded text-white hover:bg-green-700"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="bg-gray-600 px-4 py-2 rounded text-white hover:bg-gray-700"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                </div>
+
               ) : (
                 <div>
                   <h2 className="text-2xl font-semibold mb-2">{selectedItem.name}</h2>
@@ -209,11 +285,18 @@ const ClothingGallery = forwardRef((props, ref) => {
                 className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                 onClick={() => {
                   setIsEditing(true);
-                  setEditForm({
-                    name: selectedItem.name,
-                    type: selectedItem.type,
-                    brand: selectedItem.brand,
-                  });
+                setEditForm({
+                  name: selectedItem.name,
+                  type: selectedItem.type,
+                  brand: selectedItem.brand,
+                  occasion: selectedItem.occasion || "",
+                  style: selectedItem.style || "",
+                  fit: selectedItem.fit || "",
+                  color: selectedItem.color || "",
+                  material: selectedItem.material || "",
+                  season: selectedItem.season || "",
+                  notes: selectedItem.notes || "",
+                });
                 }}
               >
                 Edit

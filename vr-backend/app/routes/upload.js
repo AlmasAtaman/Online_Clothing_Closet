@@ -177,12 +177,10 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
 
 router.delete("/:key", authMiddleware, deleteImage);
 
-router.patch("/images/:key", async (req, res) => {
-  const { key } = req.params;
-  const {
-    name, type, brand, occasion, style, fit,
-    color, material, season, notes
-  } = req.body;
+router.patch("/update", authMiddleware, async (req, res) => {
+  const { key, name, type, brand, occasion, style, fit, color, material, season, notes } = req.body;
+
+  if (!key) return res.status(400).json({ error: "Missing clothing key" });
 
   try {
     const updated = await prisma.clothing.update({
@@ -199,6 +197,7 @@ router.patch("/images/:key", async (req, res) => {
     res.status(500).json({ error: "Failed to update item" });
   }
 });
+
 
 
 export default router;
