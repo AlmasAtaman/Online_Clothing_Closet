@@ -2,6 +2,8 @@
 
 import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import axios from "axios";
+import Fuse from "fuse.js";
+
 
 
 type Clothing = {
@@ -25,6 +27,9 @@ const ClothingGallery = forwardRef((props, ref) => {
   const [selectedItem, setSelectedItem] = useState<Clothing | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [autocompleteEnabled, setAutocompleteEnabled] = useState(true);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [editForm, setEditForm] = useState({
     name: "",
     type: "",
@@ -83,6 +88,33 @@ const ClothingGallery = forwardRef((props, ref) => {
     );
   };
 
+  const fuse = new Fuse(clothingItems, {
+    keys: [
+      "name", "type", "brand",
+      "occasion", "style", "fit",
+      "color", "material", "season"
+    ],
+    threshold: 0.3,
+  });
+
+  const searchResults = searchQuery
+    ? fuse.search(searchQuery).map(result => result.item)
+    : clothingItems;
+
+  const filteredItems = searchResults.filter((item) => {
+    if (selectedTags.length === 0) return true;
+    const itemTags = [
+      item.type,
+      item.occasion,
+      item.style,
+      item.fit,
+      item.color,
+      item.material,
+      item.season,
+    ].filter(Boolean);
+    return selectedTags.every((tag) => itemTags.includes(tag));
+  });
+
 
   return (
     <div className="mt-6">
@@ -109,23 +141,20 @@ const ClothingGallery = forwardRef((props, ref) => {
         </div>
       )}
 
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Search by name or tag..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full p-2 rounded border border-gray-300 text-black"
+        />
+      </div>
+
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    {Array.isArray(clothingItems) &&
-      clothingItems
-        .filter((item) => {
-          if (selectedTags.length === 0) return true;
-          const itemTags = [
-            item.type,
-            item.occasion,
-            item.style,
-            item.fit,
-            item.color,
-            item.material,
-            item.season,
-          ].filter(Boolean);
-          return selectedTags.every((tag) => itemTags.includes(tag));
-        })
-        .map((item, index) => (
+    {Array.isArray(filteredItems) &&
+    filteredItems.map((item, index) => (
           <div
             key={item.key || item.url || index}
             className="border rounded p-3 shadow cursor-pointer"
