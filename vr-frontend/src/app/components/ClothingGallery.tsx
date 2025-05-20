@@ -146,15 +146,57 @@ const ClothingGallery = forwardRef((props, ref) => {
           type="text"
           placeholder="Search by name or tag..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-2 rounded border border-gray-300 text-black"
+          onChange={(e) => {
+            const input = e.target.value;
+            setSearchQuery(input);
+
+            if (autocompleteEnabled && input) {
+              const results = fuse.search(input).map(r => r.item.name);
+              const unique = [...new Set(results)].slice(0, 5); // top 5
+              setSuggestions(unique);
+            } else {
+              setSuggestions([]);
+            }
+          }}
+          className="w-full p-2 rounded border border-gray-300 text-white bg-gray-900 placeholder-gray-400"
         />
       </div>
 
+      <div className="flex justify-between items-center mt-1 mb-2">
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            checked={autocompleteEnabled}
+            onChange={(e) => setAutocompleteEnabled(e.target.checked)}
+          />
+          <span className="text-sm text-gray-700">Enable Autocomplete</span>
+        </label>
+      </div>
+
+      {autocompleteEnabled && suggestions.length > 0 && (
+        <ul className="mb-4 bg-white border border-gray-300 rounded shadow text-sm text-black max-h-40 overflow-y-auto">
+          {suggestions.map((sug, i) => (
+            <li
+              key={i}
+              className="px-3 py-1 hover:bg-gray-100 cursor-pointer"
+              onClick={() => {
+                setSearchQuery(sug);
+                setSuggestions([]);
+              }}
+            >
+              {sug}
+            </li>
+          ))}
+        </ul>
+      )}
+
+
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    {Array.isArray(filteredItems) &&
-    filteredItems.map((item, index) => (
+      {filteredItems.length === 0 ? (
+        <p className="text-center text-gray-500 col-span-full">No results found.</p>
+      ) : (
+        filteredItems.map((item, index) => (
           <div
             key={item.key || item.url || index}
             className="border rounded p-3 shadow cursor-pointer"
@@ -171,28 +213,25 @@ const ClothingGallery = forwardRef((props, ref) => {
             <p className="text-sm text-gray-600">{item.type}</p>
             <p className="text-sm text-gray-600">{item.brand}</p>
             <div className="mt-2 flex flex-wrap gap-1">
-            {[item.type, item.occasion, item.style, item.fit, item.color, item.material, item.season]
-              .filter((tag): tag is string => Boolean(tag))
-              .map((tag) => (
-                <button
-                  key={tag}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleTag(tag);
-                  }}
-                  className={`text-xs px-2 py-1 rounded-full border ${
-                    selectedTags.includes(tag)
-                      ? "bg-black text-white"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {tag}
-                </button>
-            ))}
-
-
-          </div>
-
+              {[item.type, item.occasion, item.style, item.fit, item.color, item.material, item.season]
+                .filter((tag): tag is string => Boolean(tag))
+                .map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTag(tag);
+                    }}
+                    className={`text-xs px-2 py-1 rounded-full border ${
+                      selectedTags.includes(tag)
+                        ? "bg-black text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+            </div>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -203,7 +242,9 @@ const ClothingGallery = forwardRef((props, ref) => {
               Delete
             </button>
           </div>
-      ))}
+        ))
+      )}
+
 
 
       {selectedItem && (
