@@ -88,18 +88,24 @@ router.get("/", authMiddleware, async (req, res) => {
     if (error) return res.status(400).json({ message: error.message });
 
     const enrichedItems = clothingFromDb.map((item) => {
-      const fullUrl = presignedUrls.find((url) =>
-        url.includes(item.key)
-      );
+      const fullUrl = presignedUrls.find((url) => url.includes(item.key));
 
       return {
         key: item.key,
-        url: fullUrl || "", // fallback if URL not found
+        url: fullUrl || "",
         name: item.name || "Unnamed",
         type: item.type || "Unknown",
         brand: item.brand || "No brand",
+        occasion: item.occasion || "",
+        style: item.style || "",
+        fit: item.fit || "",
+        color: item.color || "",
+        material: item.material || "",
+        season: item.season || "",
+        notes: item.notes || ""
       };
     });
+
 
     return res.json({ clothingItems: enrichedItems });
   } catch (err) {

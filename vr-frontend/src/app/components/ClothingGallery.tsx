@@ -113,39 +113,45 @@ const ClothingGallery = forwardRef((props, ref) => {
 
 
       {selectedItem && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 text-white"
+            onClick={() => {
+              setSelectedItem(null);
+              setIsEditing(false);
+            }}
+          >
             <div
-              className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 text-white"
-              onClick={() => {
-                setSelectedItem(null);
-                setIsEditing(false);
-              }}
-            >
-            <div
-              className="relative flex bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl overflow-hidden"
+              className="relative bg-gray-900 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex"
               onClick={(e) => e.stopPropagation()}
             >
             {/* Left Arrow */}
-            <button
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 text-3xl px-4 text-white hover:text-gray-400 z-10"
-              onClick={() => {
-                const currentIndex = clothingItems.findIndex(item => item.key === selectedItem.key);
-                if (currentIndex > 0) setSelectedItem(clothingItems[currentIndex - 1]);
-              }}
-            >
-              ❮
-            </button>
+            {!isEditing && (
+              <button
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 text-3xl px-4 text-white hover:text-gray-400 z-10"
+                onClick={() => {
+                  const currentIndex = clothingItems.findIndex(item => item.key === selectedItem.key);
+                  if (currentIndex > 0) setSelectedItem(clothingItems[currentIndex - 1]);
+                }}
+              >
+                ❮
+              </button>
+            )}
+
 
             {/* Right Arrow */}
-            <button
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 text-3xl px-4 text-white hover:text-gray-400 z-10"
-              onClick={() => {
-                const currentIndex = clothingItems.findIndex(item => item.key === selectedItem.key);
-                if (currentIndex < clothingItems.length - 1)
-                  setSelectedItem(clothingItems[currentIndex + 1]);
-              }}
-            >
-              ❯
-            </button>
+            {!isEditing && (
+              <button
+                className="absolute right-0 top-1/2 transform -translate-y-1/2 text-3xl px-4 text-white hover:text-gray-400 z-10"
+                onClick={() => {
+                  const currentIndex = clothingItems.findIndex(item => item.key === selectedItem.key);
+                  if (currentIndex < clothingItems.length - 1)
+                    setSelectedItem(clothingItems[currentIndex + 1]);
+                }}
+              >
+                ❯
+              </button>
+            )}
+
 
             {/* Image Section */}
             <div className="w-1/2 bg-gray-800 p-4 flex justify-center items-center border-r border-gray-700">
@@ -153,7 +159,7 @@ const ClothingGallery = forwardRef((props, ref) => {
             </div>
 
             {/* Info Section */}
-            <div className="w-1/2 p-6 flex flex-col justify-between">
+            <div className="w-1/2 p-6 flex flex-col justify-between max-h-[90vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
               <button
                 onClick={() => setSelectedItem(null)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"
@@ -273,36 +279,65 @@ const ClothingGallery = forwardRef((props, ref) => {
                   </div>
 
               ) : (
-                <div>
+                <div className="space-y-1">
                   <h2 className="text-2xl font-semibold mb-2">{selectedItem.name}</h2>
-                  <p className="mb-1"><strong>Type:</strong> {selectedItem.type}</p>
-                  <p className="mb-1"><strong>Brand:</strong> {selectedItem.brand}</p>
+                  <p><strong>Type:</strong> {selectedItem.type}</p>
+                  <p><strong>Brand:</strong> {selectedItem.brand}</p>
+                  {selectedItem.occasion && <p><strong>Occasion:</strong> {selectedItem.occasion}</p>}
+                  {selectedItem.style && <p><strong>Style:</strong> {selectedItem.style}</p>}
+                  {selectedItem.fit && <p><strong>Fit:</strong> {selectedItem.fit}</p>}
+                  {selectedItem.color && <p><strong>Color:</strong> {selectedItem.color}</p>}
+                  {selectedItem.material && <p><strong>Material:</strong> {selectedItem.material}</p>}
+                  {selectedItem.season && <p><strong>Season:</strong> {selectedItem.season}</p>}
+                  {selectedItem.notes && <p><strong>Notes:</strong> {selectedItem.notes}</p>}
                 </div>
+
               )}
 
-              <div className="mt-6">
-              <button
-                className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                onClick={() => {
-                  setIsEditing(true);
-                setEditForm({
-                  name: selectedItem.name,
-                  type: selectedItem.type,
-                  brand: selectedItem.brand,
-                  occasion: selectedItem.occasion || "",
-                  style: selectedItem.style || "",
-                  fit: selectedItem.fit || "",
-                  color: selectedItem.color || "",
-                  material: selectedItem.material || "",
-                  season: selectedItem.season || "",
-                  notes: selectedItem.notes || "",
-                });
-                }}
-              >
-                Edit
-              </button>
+                <div className="mt-6 flex gap-2">
+                  <button
+                    className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={() => {
+                      setIsEditing(true);
+                      setEditForm({
+                        name: selectedItem.name,
+                        type: selectedItem.type,
+                        brand: selectedItem.brand,
+                        occasion: selectedItem.occasion || "",
+                        style: selectedItem.style || "",
+                        fit: selectedItem.fit || "",
+                        color: selectedItem.color || "",
+                        material: selectedItem.material || "",
+                        season: selectedItem.season || "",
+                        notes: selectedItem.notes || "",
+                      });
+                    }}
+                  >
+                    Edit
+                  </button>
 
-              </div>
+                  <button
+                    className="px-5 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    onClick={async () => {
+                      const confirmDelete = confirm("Are you sure you want to delete this item?");
+                      if (!confirmDelete) return;
+                      try {
+                        await axios.delete(
+                          `http://localhost:8000/api/images/${encodeURIComponent(selectedItem.key)}`,
+                          { withCredentials: true }
+                        );
+                        setClothingItems((prev) => prev.filter((item) => item.key !== selectedItem.key));
+                        setSelectedItem(null);
+                      } catch (err) {
+                        console.error("Error deleting item:", err);
+                        alert("Failed to delete item.");
+                      }
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+
             </div>
           </div>
         </div>
