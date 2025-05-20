@@ -7,9 +7,10 @@ type UploadModalProps = {
   show: boolean;
   onClose: () => void;
   onUploadComplete?: () => void;
+  currentViewMode?: "closet" | "wishlist";
 };
 
-export default function UploadModal({ show, onClose, onUploadComplete }: UploadModalProps) {
+export default function UploadModal({ show, onClose, onUploadComplete, currentViewMode }: UploadModalProps) {
     const modalRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -50,6 +51,7 @@ export default function UploadModal({ show, onClose, onUploadComplete }: UploadM
             if (onUploadComplete) onUploadComplete();
             onClose();
           }}
+          currentViewMode={currentViewMode}
         />
       </div>
     </div>

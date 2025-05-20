@@ -15,14 +15,22 @@ const initialData = {
     material: "",
     season: "",
     notes: "",
+    sourceUrl: "",
 };
 
 
 type ClothingFields = keyof typeof initialData;
 
 
-export default function UploadForm({ onUploadComplete }: { onUploadComplete?: () => void }) {
+export default function UploadForm({
+  onUploadComplete,
+  currentViewMode = "closet"
+}: {
+  onUploadComplete?: () => void;
+  currentViewMode?: "closet" | "wishlist";
+}) {
   const [mode, setMode] = useState<"basic" | "advanced">("basic");
+  const [uploadTarget, setUploadTarget] = useState<"closet" | "wishlist">(currentViewMode);
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -55,7 +63,7 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
       const { clothingData, imageBuffer, originalname } = res.data;
 
       if (!clothingData?.isClothing) {
-        alert("This image doesn’t look like clothing. Try a different image.");
+        alert("This image doesn't look like clothing. Try a different image.");
         return;
       }
       console.log("Gemini autofill data:", clothingData);
@@ -101,6 +109,12 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
     formData.append("name", autoData.name);
     formData.append("type", autoData.type);
     formData.append("brand", autoData.brand);
+    formData.append("mode", uploadTarget); 
+    if (uploadTarget === "wishlist" && autoData.sourceUrl) {
+      formData.append("sourceUrl", autoData.sourceUrl);
+    }
+
+
 
     if (mode === "advanced") {
       ["occasion", "style", "fit", "color", "material", "season", "notes"].forEach((field) => {
@@ -133,7 +147,15 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
 
   return (
     <div className="border p-4 rounded-xl max-w-md mx-auto">
-
+    <div className="mb-3 flex items-center gap-4">
+      <span className="text-sm font-medium">Upload Target:</span>
+      <button
+        onClick={() => setUploadTarget(uploadTarget === "closet" ? "wishlist" : "closet")}
+        className="px-3 py-1 rounded bg-purple-600 text-white hover:bg-purple-500 text-sm shadow"
+      >
+        {uploadTarget === "closet" ? "Switch to Wishlist" : "Switch to Closet"}
+      </button>
+    </div>
       <div className="mb-3 flex items-center gap-4">
       <span className="text-sm font-medium">Upload Mode:</span>
       <button
@@ -199,6 +221,16 @@ export default function UploadForm({ onUploadComplete }: { onUploadComplete?: ()
               onChange={(e) => setAutoData({ ...autoData, notes: e.target.value })}
               className="w-full border px-3 py-2 rounded h-24"
             />
+            {uploadTarget === "wishlist" && (
+              <input
+                type="text"
+                placeholder="Source URL (required for wishlist)"
+                value={autoData.sourceUrl || ""}
+                onChange={(e) => setAutoData({ ...autoData, sourceUrl: e.target.value })}
+                className="w-full border px-3 py-2 rounded"
+              />
+            )}
+
           </div>
         </div>
       ) : (

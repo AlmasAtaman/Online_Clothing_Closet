@@ -4,7 +4,10 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
 
-
+type ClothingGalleryProps = {
+  viewMode: "closet" | "wishlist";
+  setViewMode: (mode: "closet" | "wishlist") => void;
+};
 
 type Clothing = {
   key: string;
@@ -19,10 +22,11 @@ type Clothing = {
   material?: string;
   season?: string;
   notes?: string;
+  mode?: "closet" | "wishlist";
 };
 
 
-const ClothingGallery = forwardRef((props, ref) => {
+const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryProps, ref) => {
   const [clothingItems, setClothingItems] = useState<Clothing[]>([]);
   const [selectedItem, setSelectedItem] = useState<Clothing | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,7 +52,7 @@ const ClothingGallery = forwardRef((props, ref) => {
 
     const fetchImages = async () => {
     try {
-        const res = await axios.get("http://localhost:8000/api/images", {
+        const res = await axios.get(`http://localhost:8000/api/images?mode=${viewMode}`, {
           withCredentials: true,
         });
         console.log("response data", res.data);
@@ -79,7 +83,7 @@ const ClothingGallery = forwardRef((props, ref) => {
 
     useEffect(() => {
     fetchImages();
-    }, []);
+    }, [viewMode]);
 
 
   const toggleTag = (tag: string) => {
@@ -118,6 +122,20 @@ const ClothingGallery = forwardRef((props, ref) => {
 
   return (
     <div className="mt-6">
+      <div className="flex gap-2 mb-4">
+        <button
+          className={`px-4 py-2 rounded ${viewMode === "closet" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"}`}
+          onClick={() => setViewMode("closet")}
+        >
+          My Closet
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${viewMode === "wishlist" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"}`}
+          onClick={() => setViewMode("wishlist")}
+        >
+          Wishlist
+        </button>
+      </div>
       <h2 className="text-xl font-semibold mb-2">Your Closet</h2>
       {clothingItems.length === 0 && (
         <p className="text-gray-500 text-center col-span-full">Your closet is empty. Upload something!</p>
@@ -196,7 +214,9 @@ const ClothingGallery = forwardRef((props, ref) => {
       {filteredItems.length === 0 ? (
         <p className="text-center text-gray-500 col-span-full">No results found.</p>
       ) : (
-        filteredItems.map((item, index) => (
+        filteredItems
+          .filter(item => item.mode === viewMode)
+          .map((item, index) => (
           <div
             key={item.key || item.url || index}
             className="border rounded p-3 shadow cursor-pointer"
@@ -487,3 +507,4 @@ const ClothingGallery = forwardRef((props, ref) => {
 
 
 export default ClothingGallery;
+export type ViewMode = "closet" | "wishlist";

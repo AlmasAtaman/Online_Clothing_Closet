@@ -80,8 +80,13 @@ router.get("/", authMiddleware, async (req, res) => {
   if (!userId) return res.status(400).json({ message: "Bad Request" });
 
   try {
+    const mode = req.query.mode || "closet";
+
     const clothingFromDb = await prisma.clothing.findMany({
-      where: { userId },
+      where: {
+        userId,
+        mode, 
+      },
     });
 
     const { error, presignedUrls } = await getUserPresignedUrls(userId);
@@ -102,7 +107,8 @@ router.get("/", authMiddleware, async (req, res) => {
         color: item.color || "",
         material: item.material || "",
         season: item.season || "",
-        notes: item.notes || ""
+        notes: item.notes || "",
+        mode: item.mode || "closet"
       };
     });
 
@@ -116,7 +122,7 @@ router.get("/", authMiddleware, async (req, res) => {
 
 
 router.post("/submit-clothing", authMiddleware, async (req, res) => {
-  const { name, type, brand, key } = req.body;
+  const { name, type, brand, key, mode = "closet", sourceUrl = null } = req.body;
   const userId = req.user.id;
 
   if (!key) return res.status(400).json({ message: "Missing image key" });
@@ -130,6 +136,8 @@ router.post("/submit-clothing", authMiddleware, async (req, res) => {
         name: name || null,
         type: type || null,
         brand: brand || null,
+        mode,
+        sourceUrl
       },
     });
     return res.status(201).json({ message: "Clothing saved" });
@@ -144,7 +152,9 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
   const {
     name, type, brand,
     occasion, style, fit,
-    color, material, season, notes
+    color, material, season, notes,
+    mode = "closet",
+    sourceUrl = null
   } = req.body;
   const userId = req.user.id;
   const file = req.file;
@@ -171,6 +181,8 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
         material: material || null,
         season: season || null,
         notes: notes || null,
+        mode,
+        sourceUrl
       }
     });
 

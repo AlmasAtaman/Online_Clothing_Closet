@@ -15,6 +15,7 @@ export default function Homepage(){
     const [showModal, setShowModal] = useState(false);
     const router = useRouter();
     const galleryRef = useRef<any>(null);
+    const [viewMode, setViewMode] = useState<"closet" | "wishlist">("closet");
 
     useEffect(() => {
         setHasMounted(true);
@@ -58,7 +59,7 @@ export default function Homepage(){
             </div>
             <div>
                 <h2 className="text-xl font-semibold mb-4">Your Images</h2>
-                <ClothingGallery ref={galleryRef} />
+                <ClothingGallery ref={galleryRef} viewMode={viewMode} setViewMode={setViewMode}/>
             </div>
 
             <UploadModal
@@ -68,6 +69,7 @@ export default function Homepage(){
                 setShowModal(false);
                 galleryRef.current?.refresh();
             }}
+            currentViewMode={viewMode}
             />
 
         </div>
