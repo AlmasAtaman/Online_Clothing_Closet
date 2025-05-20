@@ -24,6 +24,7 @@ const ClothingGallery = forwardRef((props, ref) => {
   const [clothingItems, setClothingItems] = useState<Clothing[]>([]);
   const [selectedItem, setSelectedItem] = useState<Clothing | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [editForm, setEditForm] = useState({
     name: "",
     type: "",
@@ -75,15 +76,56 @@ const ClothingGallery = forwardRef((props, ref) => {
     fetchImages();
     }, []);
 
+
+  const toggleTag = (tag: string) => {
+  setSelectedTags((prev) =>
+    prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
+
+
   return (
     <div className="mt-6">
       <h2 className="text-xl font-semibold mb-2">Your Closet</h2>
       {clothingItems.length === 0 && (
         <p className="text-gray-500 text-center col-span-full">Your closet is empty. Upload something!</p>
         )}
+      {selectedTags.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {selectedTags.map((tag) => (
+            <div
+              key={tag}
+              className="flex items-center bg-gray-200 rounded-full px-3 py-1 text-sm"
+            >
+              <span>{tag}</span>
+              <button
+                onClick={() => toggleTag(tag)}
+                className="ml-2 text-red-500 font-bold focus:outline-none"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {Array.isArray(clothingItems) &&
-        clothingItems.map((item, index) => (
+    {Array.isArray(clothingItems) &&
+      clothingItems
+        .filter((item) => {
+          if (selectedTags.length === 0) return true;
+          const itemTags = [
+            item.type,
+            item.occasion,
+            item.style,
+            item.fit,
+            item.color,
+            item.material,
+            item.season,
+          ].filter(Boolean);
+          return selectedTags.every((tag) => itemTags.includes(tag));
+        })
+        .map((item, index) => (
           <div
             key={item.key || item.url || index}
             className="border rounded p-3 shadow cursor-pointer"
@@ -99,6 +141,29 @@ const ClothingGallery = forwardRef((props, ref) => {
             <p className="font-medium mt-2">{item.name}</p>
             <p className="text-sm text-gray-600">{item.type}</p>
             <p className="text-sm text-gray-600">{item.brand}</p>
+            <div className="mt-2 flex flex-wrap gap-1">
+            {[item.type, item.occasion, item.style, item.fit, item.color, item.material, item.season]
+              .filter((tag): tag is string => Boolean(tag))
+              .map((tag) => (
+                <button
+                  key={tag}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleTag(tag);
+                  }}
+                  className={`text-xs px-2 py-1 rounded-full border ${
+                    selectedTags.includes(tag)
+                      ? "bg-black text-white"
+                      : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {tag}
+                </button>
+            ))}
+
+
+          </div>
+
             <button
               onClick={(e) => {
                 e.stopPropagation();
