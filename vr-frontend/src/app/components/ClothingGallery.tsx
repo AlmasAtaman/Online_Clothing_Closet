@@ -10,6 +10,7 @@ type ClothingGalleryProps = {
 };
 
 type Clothing = {
+  id: string;
   key: string;
   url: string;
   name: string;
@@ -23,8 +24,22 @@ type Clothing = {
   season?: string;
   notes?: string;
   mode?: "closet" | "wishlist";
+  sourceUrl?: string;
 };
 
+type EditFormFields = {
+  name: string;
+  type: string;
+  brand: string;
+  occasion: string;
+  style: string;
+  fit: string;
+  color: string;
+  material: string;
+  season: string;
+  notes: string;
+  sourceUrl: string;
+};
 
 const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryProps, ref) => {
   const [clothingItems, setClothingItems] = useState<Clothing[]>([]);
@@ -34,7 +49,7 @@ const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryPr
   const [searchQuery, setSearchQuery] = useState("");
   const [autocompleteEnabled, setAutocompleteEnabled] = useState(true);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<EditFormFields>({
     name: "",
     type: "",
     brand: "",
@@ -44,7 +59,8 @@ const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryPr
     color: "",
     material: "",
     season: "",
-    notes: ""
+    notes: "",
+    sourceUrl: "",
   });
 
   
@@ -79,7 +95,13 @@ const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryPr
 
     useImperativeHandle(ref, () => ({
     refresh: fetchImages,
-    }), []);
+    addClothingItem: (newItem: Clothing) => {
+      console.log("ClothingGallery: addClothingItem called. newItem:", newItem, "current viewMode:", viewMode);
+      if (newItem.mode === viewMode) {
+        setClothingItems(prevItems => [...prevItems, newItem]);
+      }
+    },
+    }), [fetchImages, viewMode]);
 
     useEffect(() => {
     fetchImages();
@@ -393,19 +415,24 @@ const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryPr
                       placeholder="Notes"
                       rows={3}
                     />
+                    <input
+                      type="text"
+                      value={editForm.sourceUrl || ""}
+                      onChange={(e) => setEditForm({ ...editForm, sourceUrl: e.target.value })}
+                      className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600"
+                      placeholder="Source URL"
+                    />
 
                     <div className="flex gap-2">
                       <button
                         onClick={async () => {
                           const updated = { ...selectedItem, ...editForm };
                           try {
-                            const cleanKey = selectedItem.key; 
-
-                            console.log("Clean key:", cleanKey);
+                            console.log("Updating item with ID:", selectedItem.id, "with data:", editForm);
 
                             await axios.patch(
                               "http://localhost:8000/api/images/update",
-                              { key: cleanKey, ...editForm },
+                              { id: selectedItem.id, ...editForm },
                               { withCredentials: true }
                             );
 
@@ -436,6 +463,7 @@ const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryPr
               ) : (
                 <div className="space-y-1">
                   <h2 className="text-2xl font-semibold mb-2">{selectedItem.name}</h2>
+                  {selectedItem.sourceUrl && <p><strong>Source URL:</strong> <a href={selectedItem.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{selectedItem.sourceUrl}</a></p>}
                   <p><strong>Type:</strong> {selectedItem.type}</p>
                   <p><strong>Brand:</strong> {selectedItem.brand}</p>
                   {selectedItem.occasion && <p><strong>Occasion:</strong> {selectedItem.occasion}</p>}
@@ -465,6 +493,7 @@ const ClothingGallery = forwardRef(({ viewMode, setViewMode }: ClothingGalleryPr
                         material: selectedItem.material || "",
                         season: selectedItem.season || "",
                         notes: selectedItem.notes || "",
+                        sourceUrl: selectedItem.sourceUrl || "",
                       });
                     }}
                   >

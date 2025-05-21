@@ -26,7 +26,7 @@ export default function UploadForm({
   onUploadComplete,
   currentViewMode = "closet"
 }: {
-  onUploadComplete?: () => void;
+  onUploadComplete?: (target: "closet" | "wishlist", newItem: any) => void;
   currentViewMode?: "closet" | "wishlist";
 }) {
   const [mode, setMode] = useState<"basic" | "advanced">("basic");
@@ -103,6 +103,10 @@ export default function UploadForm({
 
   const handleSubmit = async () => {
     if (!cleanedFile) return alert("No cleaned image to submit.");
+    if (uploadTarget === "wishlist" && !autoData.sourceUrl) {
+      alert("Source URL is required for wishlist items.");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("image", cleanedFile);
@@ -123,10 +127,12 @@ export default function UploadForm({
     }
 
     try {
-      await axios.post("http://localhost:8000/api/images/final-submit", formData, {
+      const res = await axios.post("http://localhost:8000/api/images/final-submit", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });
+
+      console.log("UploadForm: Final submit successful. Response data:", res.data);
 
       alert("Clothing submitted!");
 
@@ -136,7 +142,7 @@ export default function UploadForm({
       setAutoData(initialData);
       setCleanedFile(null);
       if (inputRef.current) inputRef.current.value = "";
-      if (onUploadComplete) onUploadComplete();
+      if (onUploadComplete) onUploadComplete(uploadTarget, res.data.item);
 
     } catch (err) {
       console.error("Submit failed", err);
@@ -221,16 +227,6 @@ export default function UploadForm({
               onChange={(e) => setAutoData({ ...autoData, notes: e.target.value })}
               className="w-full border px-3 py-2 rounded h-24"
             />
-            {uploadTarget === "wishlist" && (
-              <input
-                type="text"
-                placeholder="Source URL (required for wishlist)"
-                value={autoData.sourceUrl || ""}
-                onChange={(e) => setAutoData({ ...autoData, sourceUrl: e.target.value })}
-                className="w-full border px-3 py-2 rounded"
-              />
-            )}
-
           </div>
         </div>
       ) : (
@@ -264,6 +260,16 @@ export default function UploadForm({
         </>
       )}
 
+      {/* Source URL input for all wishlist uploads, both modes */}
+      {uploadTarget === "wishlist" && (
+        <input
+          type="text"
+          placeholder="Source URL (required for wishlist)"
+          value={autoData.sourceUrl || ""}
+          onChange={(e) => setAutoData({ ...autoData, sourceUrl: e.target.value })}
+          className="w-full border px-3 py-2 rounded mb-2 mt-2"
+        />
+      )}
 
       <div className="flex gap-4 mt-4">
         <button
@@ -275,7 +281,12 @@ export default function UploadForm({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={!cleanedFile || !autoData.name || !autoData.type}
+          disabled={
+            !cleanedFile ||
+            !autoData.name ||
+            !autoData.type ||
+            (uploadTarget === "wishlist" && !autoData.sourceUrl)
+          }
           className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50"
         >
           Submit

@@ -62,6 +62,17 @@ export const getUserPresignedUrls = async (userId) => {
     }
 };
 
+export const getPresignedUrl = async (key) => {
+  try {
+    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+    const url = await getSignedUrl(s3, command, { expiresIn: 900 });
+    return { url };
+  } catch (error) {
+    console.error(`Error generating presigned URL for key ${key}:`, error);
+    return { error };
+  }
+};
+
 export async function deleteFromS3({ key }) {
   const bucket = process.env.BUCKET;
   if (!bucket) throw new Error("Missing AWS_BUCKET_NAME in env");

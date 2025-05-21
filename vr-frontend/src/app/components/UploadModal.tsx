@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 type UploadModalProps = {
   show: boolean;
   onClose: () => void;
-  onUploadComplete?: () => void;
+  onUploadComplete?: (target: "closet" | "wishlist", newItem: any) => void;
   currentViewMode?: "closet" | "wishlist";
 };
 
@@ -47,8 +47,8 @@ export default function UploadModal({ show, onClose, onUploadComplete, currentVi
         </button>
 
         <UploadForm
-          onUploadComplete={() => {
-            if (onUploadComplete) onUploadComplete();
+          onUploadComplete={(target, newItem) => {
+            if (onUploadComplete) onUploadComplete(target, newItem);
             onClose();
           }}
           currentViewMode={currentViewMode}

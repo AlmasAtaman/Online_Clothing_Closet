@@ -1,6 +1,6 @@
 import express from 'express';
 import multer, { memoryStorage } from 'multer';
-import { getUserPresignedUrls, uploadToS3 } from '../../s3.mjs';
+import { getUserPresignedUrls, uploadToS3, getPresignedUrl } from '../../s3.mjs';
 import authMiddleware from '../middlewares/auth.middleware.js';
 import { removeBackground } from "../utils/removeBackground.js";
 import { getClothingInfoFromImage } from "../utils/geminiLabeler.js";
@@ -96,6 +96,7 @@ router.get("/", authMiddleware, async (req, res) => {
       const fullUrl = presignedUrls.find((url) => url.includes(item.key));
 
       return {
+        id: item.id,
         key: item.key,
         url: fullUrl || "",
         name: item.name || "Unnamed",
@@ -108,7 +109,8 @@ router.get("/", authMiddleware, async (req, res) => {
         material: item.material || "",
         season: item.season || "",
         notes: item.notes || "",
-        mode: item.mode || "closet"
+        mode: item.mode || "closet",
+        sourceUrl: item.sourceUrl || ""
       };
     });
 
@@ -186,7 +188,26 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
       }
     });
 
-    return res.status(201).json({ message: "Clothing saved" });
+    // Fetch the newly created item to get its full data
+    const newClothingItem = await prisma.clothing.findUnique({
+      where: { id: clothing.id },
+    });
+
+    // Generate a presigned URL specifically for the new item's key
+    const { url: presignedUrl, error: presignError } = await getPresignedUrl(key);
+    if (presignError) {
+      console.error("Error generating presigned URL for new item:", presignError);
+      // Decide how to handle this - maybe return the item without URL or indicate error
+      // For now, let's return the item with an empty URL if presigning fails
+    }
+
+    const newClothingItemWithUrl = {
+      ...newClothingItem,
+      url: presignedUrl || "", // Use the URL from the specific presign call
+      mode: newClothingItem?.mode || "closet"
+    };
+
+    return res.status(201).json({ message: "Clothing saved", item: newClothingItemWithUrl });
   } catch (err) {
     console.error("Final submit failed:", err);
     return res.status(500).json({ message: "Final submit failed" });
@@ -196,16 +217,16 @@ router.post("/final-submit", authMiddleware, upload.single("image"), async (req,
 router.delete("/:key", authMiddleware, deleteImage);
 
 router.patch("/update", authMiddleware, async (req, res) => {
-  const { key, name, type, brand, occasion, style, fit, color, material, season, notes } = req.body;
+  const { id, name, type, brand, occasion, style, fit, color, material, season, notes, sourceUrl } = req.body;
 
-  if (!key) return res.status(400).json({ error: "Missing clothing key" });
+  if (!id) return res.status(400).json({ error: "Missing clothing ID" });
 
   try {
     const updated = await prisma.clothing.update({
-      where: { key },
+      where: { id },
       data: {
         name, type, brand, occasion, style, fit,
-        color, material, season, notes,
+        color, material, season, notes, sourceUrl
       },
     });
 

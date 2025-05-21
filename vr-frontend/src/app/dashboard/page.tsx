@@ -65,9 +65,12 @@ export default function Homepage(){
             <UploadModal
             show={showModal}
             onClose={() => setShowModal(false)}
-            onUploadComplete={() => {
+            onUploadComplete={(target, newItem) => {
                 setShowModal(false);
-                galleryRef.current?.refresh();
+                console.log("Dashboard: onUploadComplete received - target:", target, "newItem:", newItem);
+                setViewMode(target);
+                console.log("Dashboard: viewMode after setViewMode:", viewMode);
+                galleryRef.current?.addClothingItem(newItem);
             }}
             currentViewMode={viewMode}
             />
